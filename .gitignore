@@ -1,0 +1,27 @@
+# Go 编译文件
+GoFile
+GoFile.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 上传的文件目录
+uploads/
+
+# Go 模块缓存
+go.sum
+
+# IDE 配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 日志文件
+*.log

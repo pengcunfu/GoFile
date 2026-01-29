@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域网文件传输助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #18a058;
+            --primary-hover: #36ad6a;
+            --primary-pressed: #0c7a46;
+            --primary-suppl: #e1f5e8;
+            --info-color: #2080f0;
+            --success-color: #18a058;
+            --warning-color: #f0a020;
+            --error-color: #d03050;
+            --text-color: #333333;
+            --text-color-2: #4d4d4d;
+            --text-color-3: #666666;
+            --border-color: #e4e7ed;
+            --divider-color: #efeff5;
+            --card-color: #ffffff;
+            --body-color: #ffffff;
+            --close-color: #909399;
+            --close-color-hover: #606266;
+            --close-color-pressed: #363637;
+            --shadow-1: 0 2px 8px 2px rgba(0, 0, 0, 0.08);
+            --shadow-2: 0 4px 12px 2px rgba(0, 0, 0, 0.09);
+            --shadow-3: 0 8px 16px 4px rgba(0, 0, 0, 0.1);
+            --radius-small: 4px;
+            --radius-medium: 8px;
+            --radius-large: 12px;
+        }
+
+        body {
+            font-family: v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 24px;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--card-color);
+            border-radius: var(--radius-large);
+            box-shadow: var(--shadow-2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--card-color);
+            color: var(--text-color);
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--divider-color);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-color);
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-color-3);
+        }
+
+        .upload-section {
+            padding: 32px;
+            background: var(--card-color);
+            border-bottom: 1px solid var(--divider-color);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-medium);
+            padding: 48px 32px;
+            text-align: center;
+            background: var(--body-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            background: var(--primary-suppl);
+            border-color: var(--primary-color);
+        }
+
+        .upload-area.dragover {
+            background: var(--primary-suppl);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-suppl);
+        }
+
+        .upload-area h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .upload-area p {
+            font-size: 14px;
+            color: var(--text-color-3);
+            margin-bottom: 20px;
+        }
+
+        .upload-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 9px 20px;
+            border-radius: var(--radius-small);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .upload-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-1);
+        }
+
+        .upload-btn:active {
+            background: var(--primary-pressed);
+            transform: translateY(0);
+        }
+
+        .upload-btn:disabled {
+            background: var(--border-color);
+            color: var(--text-color-3);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .progress-container {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .files-section {
+            padding: 32px;
+        }
+
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .files-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .refresh-btn {
+            background: var(--card-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .refresh-btn:hover {
+            background: var(--primary-suppl);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-item {
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-medium);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .file-item:hover {
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-1);
+            transform: translateX(2px);
+        }
+
+        .file-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .file-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: var(--text-color);
+            font-size: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-meta {
+            font-size: 13px;
+            color: var(--text-color-3);
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--card-color);
+            color: var(--text-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .download-btn {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .download-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .delete-btn {
+            color: var(--error-color);
+            border-color: var(--error-color);
+        }
+
+        .delete-btn:hover {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-color-3);
+        }
+
+        .empty-state h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color-2);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            color: var(--text-color-3);
+        }
+
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: var(--card-color);
+            padding: 12px 20px;
+            border-radius: var(--radius-medium);
+            box-shadow: var(--shadow-3);
+            display: none;
+            z-index: 1000;
+            font-size: 14px;
+            border-left: 3px solid var(--primary-color);
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+        }
+
+        .notification.error {
+            border-left-color: var(--error-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .upload-section,
+            .files-section {
+                padding: 20px;
+            }
+
+            .file-item {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .file-info {
+                width: 100%;
+            }
+
+            .file-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .header {
+                padding: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--close-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>局域网文件传输助手</h1>
+            <p>快速、安全的文件传输解决方案</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" id="uploadArea">
+                <h3>点击或拖拽文件到此处上传</h3>
+                <p>支持任意文件类型</p>
+                <button class="upload-btn" id="uploadBtn">
+                    <span>选择文件</span>
+                </button>
+                <input type="file" id="fileInput" multiple>
+            </div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="files-section">
+            <div class="files-header">
+                <h2>文件列表</h2>
+                <button class="refresh-btn" id="refreshBtn">
+                    <span>刷新</span>
+                </button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const fileList = document.getElementById('fileList');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const notification = document.getElementById('notification');
+
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // 格式化文件大小
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // 加载文件列表
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const files = await response.json();
+
+                if (files.length === 0) {
+                    fileList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>暂无文件</h3>
+                            <p>上传您的第一个文件开始使用</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                fileList.innerHTML = files.map(file => `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-details">
+                                <div class="file-name" title="${file.name}">${file.name}</div>
+                                <div class="file-meta">${formatSize(file.size)} · ${new Date(file.modified * 1000).toLocaleString('zh-CN')}</div>
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn download-btn" onclick="downloadFile('${file.name}')">
+                                <span>下载</span>
+                            </button>
+                            <button class="btn delete-btn" onclick="deleteFile('${file.name}')">
+                                <span>删除</span>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showNotification('加载文件列表失败', 'error');
+            }
+        }
+
+        // 上传文件
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    showNotification(`文件 "${file.name}" 上传成功`);
+                    loadFiles();
+                } else {
+                    showNotification('文件上传失败', 'error');
+                }
+            } catch (error) {
+                showNotification('上传失败: ' + error.message, 'error');
+            }
+        }
+
+        // 下载文件
+        async function downloadFile(filename) {
+            try {
+                const response = await fetch(`/api/download/${encodeURIComponent(filename)}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    showNotification('下载开始');
+                } else {
+                    showNotification('下载失败', 'error');
+                }
+            } catch (error) {
+                showNotification('下载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 删除文件
+        async function deleteFile(filename) {
+            if (!confirm(`确定要删除文件 "${filename}" 吗？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/delete/${encodeURIComponent(filename)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showNotification(`文件 "${filename}" 已删除`);
+                    loadFiles();
+                } else {
+                    showNotification('删除失败', 'error');
+                }
+            } catch (error) {
+                showNotification('删除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 文件选择
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i]);
+            }
+            fileInput.value = '';
+        });
+
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            for (let i = 0; i < files.length; i++) {
+                uploadFile(files[i]);
+            }
+        });
+
+        // 刷新按钮
+        refreshBtn.addEventListener('click', loadFiles);
+
+        // 初始加载
+        loadFiles();
+    </script>
+</body>
+</html>

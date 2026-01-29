@@ -1,0 +1,187 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+const (
+	uploadDir = "./uploads"
+	port      = ":8080"
+)
+
+// FileInfo 文件信息结构
+type FileInfo struct {
+	Name     string `json:"name"`
+	Size     int64  `json:"size"`
+	Modified int64  `json:"modified"`
+}
+
+func main() {
+	// 确保上传目录存在
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		fmt.Printf("创建上传目录失败: %v\n", err)
+		return
+	}
+
+	// 设置静态文件服务
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
+
+	// API 路由
+	http.HandleFunc("/api/files", listFilesHandler)
+	http.HandleFunc("/api/upload", uploadHandler)
+	http.HandleFunc("/api/download/", downloadHandler)
+	http.HandleFunc("/api/delete/", deleteHandler)
+
+	fmt.Printf("服务器启动成功！\n")
+	fmt.Printf("文件存储目录: %s\n", uploadDir)
+	fmt.Printf("访问地址: http://localhost%s\n", port)
+	fmt.Printf("启动时间: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
+
+	if err := http.ListenAndServe(port, nil); err != nil {
+		fmt.Printf("服务器启动失败: %v\n", err)
+	}
+}
+
+// listFilesHandler 处理文件列表请求
+func listFilesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	files, err := os.ReadDir(uploadDir)
+	if err != nil {
+		http.Error(w, "读取文件列表失败", http.StatusInternalServerError)
+		return
+	}
+
+	var fileList []FileInfo
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		info, err := file.Info()
+		if err != nil {
+			continue
+		}
+
+		fileList = append(fileList, FileInfo{
+			Name:     file.Name(),
+			Size:     info.Size(),
+			Modified: info.ModTime().Unix(),
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(fileList)
+}
+
+// uploadHandler 处理文件上传
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 解析表单，最大 100MB
+	err := r.ParseMultipartForm(100 << 20)
+	if err != nil {
+		http.Error(w, "解析表单失败", http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "获取文件失败", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// 创建目标文件
+	filename := filepath.Join(uploadDir, handler.Filename)
+	dst, err := os.Create(filename)
+	if err != nil {
+		http.Error(w, "创建文件失败", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	// 复制文件内容
+	if _, err := io.Copy(dst, file); err != nil {
+		http.Error(w, "保存文件失败", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "文件上传成功")
+}
+
+// downloadHandler 处理文件下载
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 从 URL 中提取文件名
+	filename := strings.TrimPrefix(r.URL.Path, "/api/download/")
+	if filename == "" {
+		http.Error(w, "文件名不能为空", http.StatusBadRequest)
+		return
+	}
+
+	filepath := filepath.Join(uploadDir, filename)
+
+	// 检查文件是否存在
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		http.Error(w, "文件不存在", http.StatusNotFound)
+		return
+	}
+
+	// 设置响应头
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	http.ServeFile(w, r, filepath)
+}
+
+// deleteHandler 处理文件删除
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 从 URL 中提取文件名
+	filename := strings.TrimPrefix(r.URL.Path, "/api/delete/")
+	if filename == "" {
+		http.Error(w, "文件名不能为空", http.StatusBadRequest)
+		return
+	}
+
+	filepath := filepath.Join(uploadDir, filename)
+
+	// 检查文件是否存在
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		http.Error(w, "文件不存在", http.StatusNotFound)
+		return
+	}
+
+	// 删除文件
+	if err := os.Remove(filepath); err != nil {
+		http.Error(w, "删除文件失败", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "文件删除成功")
+}
