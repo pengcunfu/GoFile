@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	uploadDir = "./uploads"
-	port      = ":8080"
+	uploadDir   = "./uploads"
+	defaultPort = 3000
 )
 
 // FileInfo 文件信息结构
@@ -44,16 +44,39 @@ func main() {
 	// 获取局域网 IP 地址
 	lanIP := getLANIP()
 
-	fmt.Printf("服务器启动成功！\n")
-	fmt.Printf("文件存储目录: %s\n", uploadDir)
-	fmt.Printf("本地访问: http://localhost%s\n", port)
-	if lanIP != "" {
-		fmt.Printf("局域网访问: http://%s%s\n", lanIP, port)
-	}
-	fmt.Printf("启动时间: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
+	// 尝试从默认端口开始启动服务器
+	port := defaultPort
+	for {
+		addr := fmt.Sprintf(":%d", port)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
-		fmt.Printf("服务器启动失败: %v\n", err)
+		// 尝试启动服务器
+		listener, err := net.Listen("tcp", addr)
+		if err == nil {
+			// 成功绑定端口
+			listener.Close()
+
+			fmt.Printf("服务器启动成功！\n")
+			fmt.Printf("文件存储目录: %s\n", uploadDir)
+			fmt.Printf("本地访问: http://localhost:%d\n", port)
+			if lanIP != "" {
+				fmt.Printf("局域网访问: http://%s:%d\n", lanIP, port)
+			}
+			fmt.Printf("启动时间: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
+
+			// 启动 HTTP 服务器
+			if err := http.ListenAndServe(addr, nil); err != nil {
+				fmt.Printf("服务器运行失败: %v\n", err)
+			}
+			return
+		}
+
+		// 端口被占用，尝试下一个端口
+		fmt.Printf("端口 %d 被占用，尝试端口 %d...\n", port, port+1)
+		port++
+		if port > defaultPort+100 {
+			fmt.Printf("无法找到可用端口（已尝试 %d-%d）\n", defaultPort, port)
+			return
+		}
 	}
 }
 
