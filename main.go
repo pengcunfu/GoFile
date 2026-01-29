@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -40,14 +41,42 @@ func main() {
 	http.HandleFunc("/api/download/", downloadHandler)
 	http.HandleFunc("/api/delete/", deleteHandler)
 
+	// 获取局域网 IP 地址
+	lanIP := getLANIP()
+
 	fmt.Printf("服务器启动成功！\n")
 	fmt.Printf("文件存储目录: %s\n", uploadDir)
-	fmt.Printf("访问地址: http://localhost%s\n", port)
+	fmt.Printf("本地访问: http://localhost%s\n", port)
+	if lanIP != "" {
+		fmt.Printf("局域网访问: http://%s%s\n", lanIP, port)
+	}
 	fmt.Printf("启动时间: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	if err := http.ListenAndServe(port, nil); err != nil {
 		fmt.Printf("服务器启动失败: %v\n", err)
 	}
+}
+
+// getLANIP 获取局域网 IP 地址
+func getLANIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+
+	for _, addr := range addrs {
+		// 检查 IP 地址类型
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ip := ipnet.IP.String()
+				// 过滤掉本机回环地址和链路本地地址
+				if !strings.HasPrefix(ip, "127.") && !strings.HasPrefix(ip, "169.254.") {
+					return ip
+				}
+			}
+		}
+	}
+	return ""
 }
 
 // listFilesHandler 处理文件列表请求
@@ -63,7 +92,8 @@ func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fileList []FileInfo
+	// 初始化为空切片，避免返回 null
+	fileList := make([]FileInfo, 0)
 	for _, file := range files {
 		if file.IsDir() {
 			continue
