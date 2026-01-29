@@ -11,141 +11,108 @@
             box-sizing: border-box;
         }
 
-        :root {
-            --primary-color: #18a058;
-            --primary-hover: #36ad6a;
-            --primary-pressed: #0c7a46;
-            --primary-suppl: #e1f5e8;
-            --info-color: #2080f0;
-            --success-color: #18a058;
-            --warning-color: #f0a020;
-            --error-color: #d03050;
-            --text-color: #333333;
-            --text-color-2: #4d4d4d;
-            --text-color-3: #666666;
-            --border-color: #e4e7ed;
-            --divider-color: #efeff5;
-            --card-color: #ffffff;
-            --body-color: #ffffff;
-            --close-color: #909399;
-            --close-color-hover: #606266;
-            --close-color-pressed: #363637;
-            --shadow-1: 0 2px 8px 2px rgba(0, 0, 0, 0.08);
-            --shadow-2: 0 4px 12px 2px rgba(0, 0, 0, 0.09);
-            --shadow-3: 0 8px 16px 4px rgba(0, 0, 0, 0.1);
-            --radius-small: 4px;
-            --radius-medium: 8px;
-            --radius-large: 12px;
-        }
-
         body {
-            font-family: v-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
             background: #f5f7fa;
             min-height: 100vh;
             padding: 24px;
-            color: var(--text-color);
+            color: #333333;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: var(--card-color);
-            border-radius: var(--radius-large);
-            box-shadow: var(--shadow-2);
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px 2px rgba(0, 0, 0, 0.09);
             overflow: hidden;
         }
 
         .header {
-            background: var(--card-color);
-            color: var(--text-color);
+            background: #ffffff;
+            color: #333333;
             padding: 24px 32px;
-            border-bottom: 1px solid var(--divider-color);
+            border-bottom: 1px solid #efeff5;
         }
 
         .header h1 {
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 4px;
-            color: var(--text-color);
+            color: #333333;
         }
 
         .header p {
             font-size: 14px;
-            color: var(--text-color-3);
+            color: #666666;
         }
 
         .upload-section {
             padding: 32px;
-            background: var(--card-color);
-            border-bottom: 1px solid var(--divider-color);
+            background: #ffffff;
+            border-bottom: 1px solid #efeff5;
         }
 
         .upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius-medium);
+            border: 2px dashed #e4e7ed;
+            border-radius: 8px;
             padding: 48px 32px;
             text-align: center;
-            background: var(--body-color);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
         }
 
         .upload-area:hover {
-            background: var(--primary-suppl);
-            border-color: var(--primary-color);
+            background: #e1f5e8;
+            border-color: #18a058;
         }
 
         .upload-area.dragover {
-            background: var(--primary-suppl);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px var(--primary-suppl);
+            background: #e1f5e8;
+            border-color: #18a058;
+            box-shadow: 0 0 0 2px #e1f5e8;
         }
 
         .upload-area h3 {
             font-size: 16px;
             font-weight: 500;
-            color: var(--text-color);
+            color: #333333;
             margin-bottom: 8px;
         }
 
         .upload-area p {
             font-size: 14px;
-            color: var(--text-color-3);
+            color: #666666;
             margin-bottom: 20px;
         }
 
         .upload-btn {
-            background: var(--primary-color);
+            background: #18a058;
             color: white;
             border: none;
             padding: 9px 20px;
-            border-radius: var(--radius-small);
+            border-radius: 4px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            transition: all 0.3s ease;
+            display: inline-block;
         }
 
         .upload-btn:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-1);
+            background: #36ad6a;
         }
 
         .upload-btn:active {
-            background: var(--primary-pressed);
-            transform: translateY(0);
+            background: #0c7a46;
         }
 
         .upload-btn:disabled {
-            background: var(--border-color);
-            color: var(--text-color-3);
+            background: #e4e7ed;
+            color: #666666;
             cursor: not-allowed;
-            transform: none;
         }
 
         #fileInput {
@@ -160,43 +127,16 @@
         .progress-bar {
             width: 100%;
             height: 4px;
-            background: var(--border-color);
+            background: #e4e7ed;
             border-radius: 2px;
             overflow: hidden;
-            position: relative;
         }
 
         .progress-fill {
             height: 100%;
-            background: var(--primary-color);
+            background: #18a058;
             width: 0%;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.3),
-                transparent
-            );
-            animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-100%);
-            }
-            100% {
-                transform: translateX(100%);
-            }
+            transition: width 0.3s ease;
         }
 
         .files-section {
@@ -213,50 +153,46 @@
         .files-header h2 {
             font-size: 18px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333333;
         }
 
         .refresh-btn {
-            background: var(--card-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
+            background: #ffffff;
+            color: #333333;
+            border: 1px solid #e4e7ed;
             padding: 8px 16px;
-            border-radius: var(--radius-small);
+            border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            transition: all 0.3s ease;
+            display: inline-block;
         }
 
         .refresh-btn:hover {
-            background: var(--primary-suppl);
-            border-color: var(--primary-color);
-            color: var(--primary-color);
+            background: #e1f5e8;
+            border-color: #18a058;
+            color: #18a058;
         }
 
         .file-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            display: block;
         }
 
         .file-item {
-            background: var(--card-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-medium);
+            background: #ffffff;
+            border: 1px solid #e4e7ed;
+            border-radius: 8px;
             padding: 16px 20px;
+            margin-bottom: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
         .file-item:hover {
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow-1);
-            transform: translateX(2px);
+            border-color: #18a058;
+            box-shadow: 0 2px 8px 2px rgba(0, 0, 0, 0.08);
         }
 
         .file-info {
@@ -267,16 +203,14 @@
         }
 
         .file-details {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            display: block;
             min-width: 0;
             flex: 1;
         }
 
         .file-name {
             font-weight: 500;
-            color: var(--text-color);
+            color: #333333;
             font-size: 15px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -285,7 +219,8 @@
 
         .file-meta {
             font-size: 13px;
-            color: var(--text-color-3);
+            color: #666666;
+            margin-top: 4px;
         }
 
         .file-actions {
@@ -296,93 +231,74 @@
 
         .btn {
             padding: 8px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-small);
+            border: 1px solid #e4e7ed;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: var(--card-color);
-            color: var(--text-color);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
+            transition: all 0.3s ease;
+            background: #ffffff;
+            color: #333333;
+            display: inline-block;
         }
 
         .download-btn {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
+            color: #18a058;
+            border-color: #18a058;
         }
 
         .download-btn:hover {
-            background: var(--primary-color);
+            background: #18a058;
             color: white;
         }
 
         .delete-btn {
-            color: var(--error-color);
-            border-color: var(--error-color);
+            color: #d03050;
+            border-color: #d03050;
         }
 
         .delete-btn:hover {
-            background: var(--error-color);
+            background: #d03050;
             color: white;
         }
 
         .empty-state {
             text-align: center;
             padding: 80px 20px;
-            color: var(--text-color-3);
+            color: #666666;
         }
 
         .empty-state h3 {
             font-size: 16px;
             font-weight: 500;
-            color: var(--text-color-2);
+            color: #4d4d4d;
             margin-bottom: 8px;
         }
 
         .empty-state p {
             font-size: 14px;
-            color: var(--text-color-3);
+            color: #666666;
         }
 
         .notification {
             position: fixed;
             top: 24px;
             right: 24px;
-            background: var(--card-color);
+            background: #ffffff;
             padding: 12px 20px;
-            border-radius: var(--radius-medium);
-            box-shadow: var(--shadow-3);
+            border-radius: 8px;
+            box-shadow: 0 8px 16px 4px rgba(0, 0, 0, 0.1);
             display: none;
             z-index: 1000;
             font-size: 14px;
-            border-left: 3px solid var(--primary-color);
-            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 400px;
+            border-left: 3px solid #18a058;
         }
 
         .notification.error {
-            border-left-color: var(--error-color);
+            border-left-color: #d03050;
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @media (max-width: 768px) {
+        @media screen and (max-width: 768px) {
             body {
                 padding: 16px;
             }
@@ -394,12 +310,12 @@
 
             .file-item {
                 flex-direction: column;
-                gap: 16px;
                 align-items: flex-start;
             }
 
             .file-info {
                 width: 100%;
+                margin-bottom: 16px;
             }
 
             .file-actions {
@@ -410,25 +326,6 @@
             .header {
                 padding: 20px;
             }
-        }
-
-        /* 滚动条样式 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--close-color);
         }
     </style>
 </head>
@@ -469,21 +366,22 @@
     <div class="notification" id="notification"></div>
 
     <script>
-        const uploadArea = document.getElementById('uploadArea');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const fileInput = document.getElementById('fileInput');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressFill = document.getElementById('progressFill');
-        const fileList = document.getElementById('fileList');
-        const refreshBtn = document.getElementById('refreshBtn');
-        const notification = document.getElementById('notification');
+        var uploadArea = document.getElementById('uploadArea');
+        var uploadBtn = document.getElementById('uploadBtn');
+        var fileInput = document.getElementById('fileInput');
+        var progressContainer = document.getElementById('progressContainer');
+        var progressFill = document.getElementById('progressFill');
+        var fileList = document.getElementById('fileList');
+        var refreshBtn = document.getElementById('refreshBtn');
+        var notification = document.getElementById('notification');
 
         // 显示通知
-        function showNotification(message, type = 'success') {
+        function showNotification(message, type) {
+            type = type || 'success';
             notification.textContent = message;
-            notification.className = `notification ${type}`;
+            notification.className = 'notification ' + type;
             notification.style.display = 'block';
-            setTimeout(() => {
+            setTimeout(function() {
                 notification.style.display = 'none';
             }, 3000);
         }
@@ -491,81 +389,91 @@
         // 格式化文件大小
         function formatSize(bytes) {
             if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            var k = 1024;
+            var sizes = ['B', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
             return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
         // 加载文件列表
-        async function loadFiles() {
-            try {
-                const response = await fetch('/api/files');
-                const files = await response.json();
+        function loadFiles() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/files', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var files = JSON.parse(xhr.responseText);
 
-                if (files.length === 0) {
-                    fileList.innerHTML = `
-                        <div class="empty-state">
-                            <h3>暂无文件</h3>
-                            <p>上传您的第一个文件开始使用</p>
-                        </div>
-                    `;
-                    return;
+                    if (files.length === 0) {
+                        fileList.innerHTML =
+                            '<div class="empty-state">' +
+                                '<h3>暂无文件</h3>' +
+                                '<p>上传您的第一个文件开始使用</p>' +
+                            '</div>';
+                        return;
+                    }
+
+                    var html = files.map(function(file) {
+                        return (
+                            '<div class="file-item">' +
+                                '<div class="file-info">' +
+                                    '<div class="file-details">' +
+                                        '<div class="file-name" title="' + file.name + '">' + file.name + '</div>' +
+                                        '<div class="file-meta">' + formatSize(file.size) + ' · ' + new Date(file.modified * 1000).toLocaleString('zh-CN') + '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="file-actions">' +
+                                    '<button class="btn download-btn" onclick="downloadFile(\'' + file.name + '\')">' +
+                                        '<span>下载</span>' +
+                                    '</button>' +
+                                    '<button class="btn delete-btn" onclick="deleteFile(\'' + file.name + '\')">' +
+                                        '<span>删除</span>' +
+                                    '</button>' +
+                                '</div>' +
+                            '</div>'
+                        );
+                    }).join('');
+                    fileList.innerHTML = html;
+                } else {
+                    showNotification('加载文件列表失败', 'error');
                 }
-
-                fileList.innerHTML = files.map(file => `
-                    <div class="file-item">
-                        <div class="file-info">
-                            <div class="file-details">
-                                <div class="file-name" title="${file.name}">${file.name}</div>
-                                <div class="file-meta">${formatSize(file.size)} · ${new Date(file.modified * 1000).toLocaleString('zh-CN')}</div>
-                            </div>
-                        </div>
-                        <div class="file-actions">
-                            <button class="btn download-btn" onclick="downloadFile('${file.name}')">
-                                <span>下载</span>
-                            </button>
-                            <button class="btn delete-btn" onclick="deleteFile('${file.name}')">
-                                <span>删除</span>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
+            };
+            xhr.onerror = function() {
                 showNotification('加载文件列表失败', 'error');
-            }
+            };
+            xhr.send();
         }
 
         // 上传文件
-        async function uploadFile(file) {
-            const formData = new FormData();
+        function uploadFile(file) {
+            var formData = new FormData();
             formData.append('file', file);
 
-            try {
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    showNotification(`文件 "${file.name}" 上传成功`);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/upload', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    showNotification('文件 "' + file.name + '" 上传成功');
                     loadFiles();
                 } else {
                     showNotification('文件上传失败', 'error');
                 }
-            } catch (error) {
-                showNotification('上传失败: ' + error.message, 'error');
-            }
+            };
+            xhr.onerror = function() {
+                showNotification('上传失败', 'error');
+            };
+            xhr.send(formData);
         }
 
         // 下载文件
-        async function downloadFile(filename) {
-            try {
-                const response = await fetch(`/api/download/${encodeURIComponent(filename)}`);
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
+        function downloadFile(filename) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/download/' + encodeURIComponent(filename), true);
+            xhr.responseType = 'blob';
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var blob = xhr.response;
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
                     a.href = url;
                     a.download = filename;
                     document.body.appendChild(a);
@@ -576,59 +484,64 @@
                 } else {
                     showNotification('下载失败', 'error');
                 }
-            } catch (error) {
-                showNotification('下载失败: ' + error.message, 'error');
-            }
+            };
+            xhr.onerror = function() {
+                showNotification('下载失败', 'error');
+            };
+            xhr.send();
         }
 
         // 删除文件
-        async function deleteFile(filename) {
-            if (!confirm(`确定要删除文件 "${filename}" 吗？`)) {
+        function deleteFile(filename) {
+            if (!confirm('确定要删除文件 "' + filename + '" 吗？')) {
                 return;
             }
 
-            try {
-                const response = await fetch(`/api/delete/${encodeURIComponent(filename)}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    showNotification(`文件 "${filename}" 已删除`);
+            var xhr = new XMLHttpRequest();
+            xhr.open('DELETE', '/api/delete/' + encodeURIComponent(filename), true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    showNotification('文件 "' + filename + '" 已删除');
                     loadFiles();
                 } else {
                     showNotification('删除失败', 'error');
                 }
-            } catch (error) {
-                showNotification('删除失败: ' + error.message, 'error');
-            }
+            };
+            xhr.onerror = function() {
+                showNotification('删除失败', 'error');
+            };
+            xhr.send();
         }
 
         // 文件选择
-        uploadBtn.addEventListener('click', () => fileInput.click());
+        uploadBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
 
-        fileInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            for (let i = 0; i < files.length; i++) {
+        fileInput.addEventListener('change', function(e) {
+            var files = e.target.files;
+            for (var i = 0; i < files.length; i++) {
                 uploadFile(files[i]);
             }
             fileInput.value = '';
         });
 
         // 拖拽上传
-        uploadArea.addEventListener('dragover', (e) => {
+        uploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
-            uploadArea.classList.add('dragover');
+            uploadArea.className = 'upload-area dragover';
         });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.className = 'upload-area';
         });
 
-        uploadArea.addEventListener('drop', (e) => {
+        uploadArea.addEventListener('drop', function(e) {
             e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            for (let i = 0; i < files.length; i++) {
+            uploadArea.className = 'upload-area';
+            var files = e.dataTransfer.files;
+            for (var i = 0; i < files.length; i++) {
                 uploadFile(files[i]);
             }
         });
