@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,9 @@ import (
 	"strings"
 	"time"
 )
+
+//go:embed static/index.html
+var staticFiles embed.FS
 
 const (
 	uploadDir   = "./uploads"
@@ -31,9 +35,8 @@ func main() {
 		return
 	}
 
-	// 设置静态文件服务
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/", fs)
+	// 设置路由
+	http.HandleFunc("/", indexHandler)
 
 	// API 路由
 	http.HandleFunc("/api/files", listFilesHandler)
@@ -57,9 +60,9 @@ func main() {
 
 			fmt.Printf("服务器启动成功！\n")
 			fmt.Printf("文件存储目录: %s\n", uploadDir)
-			fmt.Printf("本地访问: http://localhost:%d\n", port)
+			fmt.Printf("本地访问: http://localhost:%d/\n", port)
 			if lanIP != "" {
-				fmt.Printf("局域网访问: http://%s:%d\n", lanIP, port)
+				fmt.Printf("局域网访问: http://%s:%d/\n", lanIP, port)
 			}
 			fmt.Printf("启动时间: %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
 
@@ -78,6 +81,25 @@ func main() {
 			return
 		}
 	}
+}
+
+// indexHandler 处理首页请求
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	// 只处理根路径
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	// 读取嵌入的 HTML 文件
+	content, err := staticFiles.ReadFile("static/index.html")
+	if err != nil {
+		http.Error(w, "页面加载失败", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(content)
 }
 
 // getLANIP 获取局域网 IP 地址
