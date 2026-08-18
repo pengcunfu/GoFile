@@ -105,11 +105,18 @@ FileShare.Go/
 ├── server.go         # 共享的 HTTP 服务与全部 API 处理逻辑
 ├── static/           # 静态文件目录
 │   └── index.html    # 前端页面（Web 版与桌面版共用）
-├── uploads/          # 上传文件存储目录（自动创建）
 ├── build.ps1         # Windows 构建脚本
 ├── build.sh          # macOS / Linux 构建脚本
 └── README.md         # 项目说明文档
 ```
+
+用户数据（上传文件）默认存储在文档目录：
+
+```text
+Documents/FNSoftware/FileShare/uploads/
+```
+
+例如 Windows：`C:\Users\<用户名>\Documents\FNSoftware\FileShare\uploads\`
 
 ## ⚙️ 配置说明
 
@@ -123,11 +130,17 @@ const defaultPort = 3000  // 修改为你想要的端口
 
 ### 修改上传目录
 
-编辑 [server.go](server.go) 文件：
+编辑 [server.go](server.go) 中的提供商 / 程序名常量：
 
 ```go
-const uploadDir = "./uploads"  // 修改为你想要的目录
+const (
+	providerName = "FNSoftware"  // 软件提供商目录
+	appName      = "FileShare"   // 程序目录
+	uploadsName  = "uploads"     // 上传子目录
+)
 ```
+
+实际路径为：`文档目录 / FNSoftware / FileShare / uploads`
 
 ### 修改文件大小限制
 
@@ -141,7 +154,7 @@ err := r.ParseMultipartForm(100 << 20)  // 100 << 20 表示 100MB
 
 1. **局域网使用** - 本工具设计用于局域网文件传输，不建议直接暴露到公网
 2. **文件验证** - 当前版本不包含文件类型验证，请谨慎上传和下载文件
-3. **数据备份** - 上传的文件存储在 `uploads` 目录，请定期备份重要文件
+3. **数据备份** - 上传的文件存储在文档目录下的 `FNSoftware/FileShare/uploads`，请定期备份重要文件
 4. **访问控制** - 如需添加访问控制，请自行实现身份验证功能
 
 ## 🎣 API 接口

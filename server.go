@@ -17,11 +17,18 @@ import (
 var staticFiles embed.FS
 
 const (
-	uploadDir   = "./uploads"
+	// 用户数据：文档目录 / FNSoftware（提供商） / FileShare（程序） / uploads
+	providerName = "FNSoftware"
+	appName      = "FileShare"
+	uploadsName  = "uploads"
+
 	defaultPort = 3000
 	// maxPortScan 端口扫描范围
 	maxPortScan = 100
 )
+
+// uploadDir 上传文件实际存储路径，在 ensureUploadDir 中初始化
+var uploadDir string
 
 // FileInfo 文件信息结构
 type FileInfo struct {
@@ -46,9 +53,39 @@ func newMux() *http.ServeMux {
 	return mux
 }
 
-// ensureUploadDir 确保上传目录存在
+// userDocumentsDir 返回当前用户的「文档」目录
+func userDocumentsDir() (string, error) {
+	if xdg := os.Getenv("XDG_DOCUMENTS_DIR"); xdg != "" {
+		return xdg, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, "Documents"), nil
+}
+
+// resolveUploadDir 解析为 Documents/FNSoftware/FileShare/uploads
+func resolveUploadDir() (string, error) {
+	docs, err := userDocumentsDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(docs, providerName, appName, uploadsName), nil
+}
+
+// ensureUploadDir 解析用户数据路径；若 FNSoftware / FileShare / uploads 不存在则自动创建
 func ensureUploadDir() error {
-	return os.MkdirAll(uploadDir, 0755)
+	dir, err := resolveUploadDir()
+	if err != nil {
+		return fmt.Errorf("解析用户数据目录失败: %w", err)
+	}
+	uploadDir = dir
+	// MkdirAll 会创建整条路径中缺失的每一级目录
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return fmt.Errorf("创建上传目录失败 (%s): %w", uploadDir, err)
+	}
+	return nil
 }
 
 // findAvailablePort 尝试从默认端口开始查找可用端口
@@ -139,6 +176,11 @@ func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := ensureUploadDir(); err != nil {
+		http.Error(w, "创建上传目录失败", http.StatusInternalServerError)
+		return
+	}
+
 	files, err := os.ReadDir(uploadDir)
 	if err != nil {
 		http.Error(w, "读取文件列表失败", http.StatusInternalServerError)
@@ -188,6 +230,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
+	// 上传前再次确保目录存在（防止运行中被删除）
+	if err := ensureUploadDir(); err != nil {
+		http.Error(w, "创建上传目录失败", http.StatusInternalServerError)
+		return
+	}
 
 	// 创建目标文件
 	filename := filepath.Join(uploadDir, handler.Filename)
