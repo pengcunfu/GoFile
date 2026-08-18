@@ -1,6 +1,12 @@
-# Go 编译文件
+# Go binaries
+FireShare
+FireShare.exe
+FireShare-Desktop
+FireShare-Desktop.exe
 GoFile
 GoFile.exe
+GoFile-Desktop
+GoFile-Desktop.exe
 *.exe
 *.dll
 *.so

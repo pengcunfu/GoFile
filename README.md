@@ -1,4 +1,4 @@
-# 📁 局域网文件传输助手
+# FireShare
 
 一个简单高效的基于 Go 的局域网文件传输工具，支持文件上传、下载和列表管理。
 
@@ -49,18 +49,20 @@ go run .
 **Windows：**
 
 ```bash
-go build -tags "desktop production" -ldflags "-H windowsgui" -o GoFile-Desktop.exe .
-GoFile-Desktop.exe
+go build -tags "desktop production" -ldflags "-H windowsgui" -o FireShare-Desktop.exe .
+FireShare-Desktop.exe
 ```
 
 **macOS / Linux：**
 
 ```bash
-go build -tags "desktop production" -o GoFile-Desktop .
-./GoFile-Desktop
+go build -tags "desktop production" -o FireShare-Desktop .
+./FireShare-Desktop
 ```
 
-桌面版启动后会打开原生窗口，同时后台仍会运行局域网 HTTP 服务，其他设备依然可以通过浏览器上传/下载文件。
+桌面版启动后会打开原生窗口（自动跳转到本机 HTTP 服务页面），同时后台仍会运行局域网 HTTP 服务，其他设备依然可以通过浏览器上传/下载文件。
+
+> 说明：桌面窗口不走 Wails AssetServer 转发上传请求。WebView2 在 AssetServer 路径下会丢失 multipart 文件内容（保存为 0KB），因此窗口直接使用 `http://127.0.0.1:<端口>/`。
 
 ## 🔨 构建脚本
 
@@ -72,9 +74,19 @@ go build -tags "desktop production" -o GoFile-Desktop .
 构建产物：
 
 ```text
-GoFile.exe / GoFile          # Web 版（终端运行，输出访问地址）
-GoFile-Desktop.exe / GoFile-Desktop  # 桌面版（原生窗口）
+FireShare.exe / FireShare                  # Web 版（终端运行，输出访问地址）
+FireShare-Desktop.exe / FireShare-Desktop  # 桌面版（原生窗口）
 ```
+
+## 🌐 网络与防火墙
+
+程序启动后会：
+
+1. 显示本机与局域网/公网访问地址  
+2. **只读检测** Windows 防火墙是否可能拦截当前 TCP 端口（不提权、不修改防火墙规则）  
+3. 提示：若在云服务器上运行，还需在云厂商控制台安全组中放行对应端口  
+
+也可通过接口查询：`GET /api/network`
 
 ## 📖 使用说明
 
@@ -110,13 +122,17 @@ FileShare.Go/
 └── README.md         # 项目说明文档
 ```
 
-用户数据（上传文件）默认存储在文档目录：
+用户数据（上传文件）默认存储在系统「文档」目录下（路径由操作系统动态解析，非写死）：
 
 ```text
-Documents/FNSoftware/FileShare/uploads/
+<Documents>/FNSoftware/FireShare/uploads/
 ```
 
-例如 Windows：`C:\Users\<用户名>\Documents\FNSoftware\FileShare\uploads\`
+例如本机通过系统 API 解析到的文档目录可能是 `D:\Data\Documents`，则完整路径为：
+
+`D:\Data\Documents\FNSoftware\FireShare\uploads\`
+
+Windows 使用 Known Folder（`FOLDERID_Documents`），可正确处理 OneDrive 重定向与自定义文档位置。
 
 ## ⚙️ 配置说明
 
@@ -135,12 +151,12 @@ const defaultPort = 3000  // 修改为你想要的端口
 ```go
 const (
 	providerName = "FNSoftware"  // 软件提供商目录
-	appName      = "FileShare"   // 程序目录
+	appName      = "FireShare"   // 程序目录
 	uploadsName  = "uploads"     // 上传子目录
 )
 ```
 
-实际路径为：`文档目录 / FNSoftware / FileShare / uploads`
+实际路径为：`文档目录 / FNSoftware / FireShare / uploads`
 
 ### 修改文件大小限制
 
@@ -154,7 +170,7 @@ err := r.ParseMultipartForm(100 << 20)  // 100 << 20 表示 100MB
 
 1. **局域网使用** - 本工具设计用于局域网文件传输，不建议直接暴露到公网
 2. **文件验证** - 当前版本不包含文件类型验证，请谨慎上传和下载文件
-3. **数据备份** - 上传的文件存储在文档目录下的 `FNSoftware/FileShare/uploads`，请定期备份重要文件
+3. **数据备份** - 上传的文件存储在文档目录下的 `FNSoftware/FireShare/uploads`，请定期备份重要文件
 4. **访问控制** - 如需添加访问控制，请自行实现身份验证功能
 
 ## 🎣 API 接口

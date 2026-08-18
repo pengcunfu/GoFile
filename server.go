@@ -17,9 +17,9 @@ import (
 var staticFiles embed.FS
 
 const (
-	// 用户数据：文档目录 / FNSoftware（提供商） / FileShare（程序） / uploads
+	// 用户数据：文档目录 / FNSoftware（提供商） / FireShare（程序） / uploads
 	providerName = "FNSoftware"
-	appName      = "FileShare"
+	appName      = "FireShare"
 	uploadsName  = "uploads"
 
 	defaultPort = 3000
@@ -27,8 +27,13 @@ const (
 	maxPortScan = 100
 )
 
-// uploadDir 上传文件实际存储路径，在 ensureUploadDir 中初始化
-var uploadDir string
+// dataDir 程序数据根目录：Documents/FNSoftware/FireShare
+// uploadDir 上传文件目录：dataDir/uploads
+// 均在 ensureDataDir 中于启动时初始化并创建
+var (
+	dataDir   string
+	uploadDir string
+)
 
 // FileInfo 文件信息结构
 type FileInfo struct {
@@ -49,41 +54,32 @@ func newMux() *http.ServeMux {
 	mux.HandleFunc("/api/upload", uploadHandler)
 	mux.HandleFunc("/api/download/", downloadHandler)
 	mux.HandleFunc("/api/delete/", deleteHandler)
+	mux.HandleFunc("/api/network", networkStatusHandler)
 
 	return mux
 }
 
-// userDocumentsDir 返回当前用户的「文档」目录
-func userDocumentsDir() (string, error) {
-	if xdg := os.Getenv("XDG_DOCUMENTS_DIR"); xdg != "" {
-		return xdg, nil
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, "Documents"), nil
-}
-
-// resolveUploadDir 解析为 Documents/FNSoftware/FileShare/uploads
-func resolveUploadDir() (string, error) {
+// resolveDataDir 解析为 <动态文档目录>/FNSoftware/FireShare
+func resolveDataDir() (string, error) {
 	docs, err := userDocumentsDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(docs, providerName, appName, uploadsName), nil
+	return filepath.Join(docs, providerName, appName), nil
 }
 
-// ensureUploadDir 解析用户数据路径；若 FNSoftware / FileShare / uploads 不存在则自动创建
-func ensureUploadDir() error {
-	dir, err := resolveUploadDir()
+// ensureDataDir 在程序启动时解析并创建数据目录（含 uploads 子目录）。
+// 若 FNSoftware / FireShare / uploads 任一缺失，会自动创建整条路径。
+func ensureDataDir() error {
+	root, err := resolveDataDir()
 	if err != nil {
-		return fmt.Errorf("解析用户数据目录失败: %w", err)
+		return fmt.Errorf("解析数据目录失败: %w", err)
 	}
-	uploadDir = dir
-	// MkdirAll 会创建整条路径中缺失的每一级目录
+	dataDir = root
+	uploadDir = filepath.Join(dataDir, uploadsName)
+
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
-		return fmt.Errorf("创建上传目录失败 (%s): %w", uploadDir, err)
+		return fmt.Errorf("创建数据目录失败 (%s): %w", uploadDir, err)
 	}
 	return nil
 }
@@ -176,7 +172,7 @@ func listFilesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ensureUploadDir(); err != nil {
+	if err := ensureDataDir(); err != nil {
 		http.Error(w, "创建上传目录失败", http.StatusInternalServerError)
 		return
 	}
@@ -232,23 +228,40 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// 上传前再次确保目录存在（防止运行中被删除）
-	if err := ensureUploadDir(); err != nil {
+	if err := ensureDataDir(); err != nil {
 		http.Error(w, "创建上传目录失败", http.StatusInternalServerError)
 		return
 	}
 
-	// 创建目标文件
-	filename := filepath.Join(uploadDir, handler.Filename)
-	dst, err := os.Create(filename)
+	// 仅使用文件名，避免路径穿越
+	name := filepath.Base(handler.Filename)
+	if name == "" || name == "." || name == ".." {
+		http.Error(w, "文件名无效", http.StatusBadRequest)
+		return
+	}
+
+	destPath := filepath.Join(uploadDir, name)
+	dst, err := os.Create(destPath)
 	if err != nil {
 		http.Error(w, "创建文件失败", http.StatusInternalServerError)
 		return
 	}
-	defer dst.Close()
 
-	// 复制文件内容
-	if _, err := io.Copy(dst, file); err != nil {
+	written, err := io.Copy(dst, file)
+	closeErr := dst.Close()
+	if err != nil {
+		_ = os.Remove(destPath)
 		http.Error(w, "保存文件失败", http.StatusInternalServerError)
+		return
+	}
+	if closeErr != nil {
+		_ = os.Remove(destPath)
+		http.Error(w, "保存文件失败", http.StatusInternalServerError)
+		return
+	}
+	if written == 0 && handler.Size > 0 {
+		_ = os.Remove(destPath)
+		http.Error(w, "上传内容为空，请重试", http.StatusBadRequest)
 		return
 	}
 

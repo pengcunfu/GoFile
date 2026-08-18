@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>局域网文件传输助手</title>
+    <title>FireShare</title>
     <style>
         * {
             margin: 0;
@@ -44,6 +44,64 @@
 
         .header p {
             font-size: 14px;
+            color: #666666;
+        }
+
+        .network-panel {
+            margin: 0 32px;
+            margin-top: 24px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            border: 1px solid #e4e7ed;
+            background: #fafafa;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #4d4d4d;
+        }
+
+        .network-panel.ok {
+            border-color: #18a058;
+            background: #e1f5e8;
+        }
+
+        .network-panel.may_block {
+            border-color: #f0a020;
+            background: #fff7e8;
+        }
+
+        .network-panel.checking {
+            border-color: #2080f0;
+            background: #eef4ff;
+        }
+
+        .network-panel.unknown {
+            border-color: #2080f0;
+            background: #eef4ff;
+        }
+
+        .network-panel .row {
+            margin-bottom: 6px;
+        }
+
+        .network-panel .row:last-child {
+            margin-bottom: 0;
+        }
+
+        .network-panel .label {
+            color: #666666;
+            display: inline-block;
+            min-width: 88px;
+        }
+
+        .network-panel a {
+            color: #18a058;
+            word-break: break-all;
+        }
+
+        .network-panel .tip {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(0, 0, 0, 0.08);
             color: #666666;
         }
 
@@ -312,6 +370,10 @@
                 padding: 20px;
             }
 
+            .network-panel {
+                margin: 16px 16px 0;
+            }
+
             .file-item {
                 flex-direction: column;
                 align-items: flex-start;
@@ -336,8 +398,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>局域网文件传输助手</h1>
+            <h1>FireShare</h1>
             <p>快速、安全的文件传输解决方案</p>
+        </div>
+
+        <div class="network-panel unknown" id="networkPanel">
+            <div class="row"><span class="label">网络状态</span>检测中…</div>
         </div>
 
         <div class="upload-section">
@@ -378,6 +444,50 @@
         var fileList = document.getElementById('fileList');
         var refreshBtn = document.getElementById('refreshBtn');
         var notification = document.getElementById('notification');
+        var networkPanel = document.getElementById('networkPanel');
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function loadNetworkStatus() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/network', true);
+            xhr.onload = function() {
+                if (xhr.status !== 200) {
+                    networkPanel.className = 'network-panel unknown';
+                    networkPanel.innerHTML = '<div class="row">网络状态加载失败</div>';
+                    return;
+                }
+                var info = JSON.parse(xhr.responseText);
+                var status = info.firewallStatus || 'unknown';
+                networkPanel.className = 'network-panel ' + status;
+
+                var lanHtml = info.lanUrl
+                    ? '<a href="' + escapeHtml(info.lanUrl) + '" target="_blank" rel="noopener">' + escapeHtml(info.lanUrl) + '</a>'
+                    : '未检测到可用网卡 IP';
+
+                networkPanel.innerHTML =
+                    '<div class="row"><span class="label">本地访问</span><a href="' + escapeHtml(info.localUrl) + '" target="_blank" rel="noopener">' + escapeHtml(info.localUrl) + '</a></div>' +
+                    '<div class="row"><span class="label">局域网/公网</span>' + lanHtml + '</div>' +
+                    '<div class="row"><span class="label">防火墙</span>' + escapeHtml(info.firewallMessage || '') + '</div>' +
+                    '<div class="tip">' + escapeHtml(info.cloudTip || '') + '</div>';
+
+                // 检测进行中时自动刷新，直到有最终结果
+                if (status === 'checking') {
+                    setTimeout(loadNetworkStatus, 1500);
+                }
+            };
+            xhr.onerror = function() {
+                networkPanel.className = 'network-panel unknown';
+                networkPanel.innerHTML = '<div class="row">网络状态加载失败</div>';
+            };
+            xhr.send();
+        }
 
         // 显示通知
         function showNotification(message, type) {
@@ -554,6 +664,7 @@
         refreshBtn.addEventListener('click', loadFiles);
 
         // 初始加载
+        loadNetworkStatus();
         loadFiles();
     </script>
 </body>
